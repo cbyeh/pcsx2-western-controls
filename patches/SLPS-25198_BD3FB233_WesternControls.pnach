@@ -26,39 +26,47 @@ patch=1,EE,00268db4,word,0803f417 // j 0x0fd05c  (was jr ra / 03e00008)
 
 [Right Stick Camera]
 author=Claude
-description=Push right = camera swings right (same direction as L2/R2). Right stick left/right is turned into L2/R2 (KH1's camera-rotate buttons). Analog mode only. Works with or without the X/O swap. Enable only ONE camera patch.
-patch=1,EE,000fd200,word,0c047cdc // jal  0x11f370       (original call: analog -> direction bits)
-patch=1,EE,000fd204,word,03a0282d // move a1,sp          (delay slot, original)
-patch=1,EE,000fd208,word,93a40002 // lbu  a0,2(sp)       right stick X (0x00 left .. 0xFF right)
-patch=1,EE,000fd20c,word,2c850040 // sltiu a1,a0,0x40    deflected left?
-patch=1,EE,000fd210,word,10a00002 // beqz a1,+2
-patch=1,EE,000fd214,word,2c8500c1 // sltiu a1,a0,0xc1    (delay slot) deflected right? (a1==0)
-patch=1,EE,000fd218,word,34420100 // ori  v0,v0,0x100    stick left  -> L2
-patch=1,EE,000fd21c,word,14a00002 // bnez a1,+2
-patch=1,EE,000fd220,word,00000000 // nop
-patch=1,EE,000fd224,word,34420200 // ori  v0,v0,0x200    stick right -> R2
-patch=1,EE,000fd228,word,08047dd5 // j    0x11f754       back to caller (or s2,s2,v0)
-patch=1,EE,000fd22c,word,00000000 // nop
-patch=1,EE,0011f74c,word,0200202d // move a0,s0          (delay slot of hook)
-patch=1,EE,0011f748,word,0803f480 // j 0x0fd200          (was: move a0,s0 ; jal 0x11f370)
+description=Push right = camera swings right. Right stick left/right drives KH1's L2/R2 camera rotation. Active only in the field (KH1 main mode 3), so the Gummi Garage, world map and Gummi flight never see stick-made L2/R2 presses. Analog mode only (no effect in digital mode). Works with or without the X/O swap. Enable only ONE camera patch.
+patch=1,EE,000fd0a0,word,0c047cdc // jal  0x11f370        (original call: analog -> direction bits)
+patch=1,EE,000fd0a4,word,03a0282d // move a1,sp           (delay slot, original)
+patch=1,EE,000fd0a8,word,3c01002c // lui  at,0x2c
+patch=1,EE,000fd0ac,word,8c21bde0 // lw   at,0x2bbde0     KH1 main-loop mode (3 = field, 5 = Gummi: world map/garage/flight)
+patch=1,EE,000fd0b0,word,24040003 // addiu a0,zero,3
+patch=1,EE,000fd0b4,word,14240008 // bne  at,a0,done      not in the field: leave buttons alone
+patch=1,EE,000fd0b8,word,93a40002 // lbu  a0,2(sp)        (delay slot) right stick X (0x00 left .. 0xFF right)
+patch=1,EE,000fd0bc,word,2c850040 // sltiu a1,a0,0x40     deflected left?
+patch=1,EE,000fd0c0,word,10a00002 // beqz a1,+2
+patch=1,EE,000fd0c4,word,2c8500c1 // sltiu a1,a0,0xc1     (delay slot) a1==0: deflected right
+patch=1,EE,000fd0c8,word,34420100 // ori  v0,v0,0x100      stick left  -> L2
+patch=1,EE,000fd0cc,word,14a00002 // bnez a1,+2
+patch=1,EE,000fd0d0,word,00000000 // nop
+patch=1,EE,000fd0d4,word,34420200 // ori  v0,v0,0x200      stick right -> R2
+patch=1,EE,000fd0d8,word,08047dd5 // done: j 0x11f754     back to caller (or s2,s2,v0)
+patch=1,EE,000fd0dc,word,00000000 // nop
+patch=1,EE,0011f74c,word,0200202d // move a0,s0           (delay slot of hook)
+patch=1,EE,0011f748,word,0803f428 // j 0x0fd0a0          (was: move a0,s0 ; jal 0x11f370 - analog-mode branch only)
 
 [Right Stick Camera (Inverted)]
 author=Claude
-description=Inverted: push right = camera swings left. Right stick left/right is turned into R2/L2 (KH1's camera-rotate buttons). Analog mode only. Works with or without the X/O swap. Enable only ONE camera patch.
-patch=1,EE,000fd200,word,0c047cdc // jal  0x11f370       (original call: analog -> direction bits)
-patch=1,EE,000fd204,word,03a0282d // move a1,sp          (delay slot, original)
-patch=1,EE,000fd208,word,93a40002 // lbu  a0,2(sp)       right stick X (0x00 left .. 0xFF right)
-patch=1,EE,000fd20c,word,2c850040 // sltiu a1,a0,0x40    deflected left?
-patch=1,EE,000fd210,word,10a00002 // beqz a1,+2
-patch=1,EE,000fd214,word,2c8500c1 // sltiu a1,a0,0xc1    (delay slot) deflected right? (a1==0)
-patch=1,EE,000fd218,word,34420200 // ori  v0,v0,0x200    stick left  -> R2
-patch=1,EE,000fd21c,word,14a00002 // bnez a1,+2
-patch=1,EE,000fd220,word,00000000 // nop
-patch=1,EE,000fd224,word,34420100 // ori  v0,v0,0x100    stick right -> L2
-patch=1,EE,000fd228,word,08047dd5 // j    0x11f754       back to caller (or s2,s2,v0)
-patch=1,EE,000fd22c,word,00000000 // nop
-patch=1,EE,0011f74c,word,0200202d // move a0,s0          (delay slot of hook)
-patch=1,EE,0011f748,word,0803f480 // j 0x0fd200          (was: move a0,s0 ; jal 0x11f370)
+description=Inverted: push right = camera swings left. Right stick left/right drives KH1's L2/R2 camera rotation. Active only in the field (KH1 main mode 3), so the Gummi Garage, world map and Gummi flight never see stick-made L2/R2 presses. Analog mode only (no effect in digital mode). Works with or without the X/O swap. Enable only ONE camera patch.
+patch=1,EE,000fd0a0,word,0c047cdc // jal  0x11f370        (original call: analog -> direction bits)
+patch=1,EE,000fd0a4,word,03a0282d // move a1,sp           (delay slot, original)
+patch=1,EE,000fd0a8,word,3c01002c // lui  at,0x2c
+patch=1,EE,000fd0ac,word,8c21bde0 // lw   at,0x2bbde0     KH1 main-loop mode (3 = field, 5 = Gummi: world map/garage/flight)
+patch=1,EE,000fd0b0,word,24040003 // addiu a0,zero,3
+patch=1,EE,000fd0b4,word,14240008 // bne  at,a0,done      not in the field: leave buttons alone
+patch=1,EE,000fd0b8,word,93a40002 // lbu  a0,2(sp)        (delay slot) right stick X (0x00 left .. 0xFF right)
+patch=1,EE,000fd0bc,word,2c850040 // sltiu a1,a0,0x40     deflected left?
+patch=1,EE,000fd0c0,word,10a00002 // beqz a1,+2
+patch=1,EE,000fd0c4,word,2c8500c1 // sltiu a1,a0,0xc1     (delay slot) a1==0: deflected right
+patch=1,EE,000fd0c8,word,34420200 // ori  v0,v0,0x200      stick left  -> R2
+patch=1,EE,000fd0cc,word,14a00002 // bnez a1,+2
+patch=1,EE,000fd0d0,word,00000000 // nop
+patch=1,EE,000fd0d4,word,34420100 // ori  v0,v0,0x100      stick right -> L2
+patch=1,EE,000fd0d8,word,08047dd5 // done: j 0x11f754     back to caller (or s2,s2,v0)
+patch=1,EE,000fd0dc,word,00000000 // nop
+patch=1,EE,0011f74c,word,0200202d // move a0,s0           (delay slot of hook)
+patch=1,EE,0011f748,word,0803f428 // j 0x0fd0a0          (was: move a0,s0 ; jal 0x11f370 - analog-mode branch only)
 
 [Widescreen 16:9]
 gsaspectratio=16:9
@@ -102,3 +110,37 @@ patch=1,EE,E0011008,extended,002C5958 // if state == 0x1008:
 patch=1,EE,002BBE0C,extended,00000001 //   30 FPS
 patch=1,EE,E0010009,extended,002C5958 // if state == 9:
 patch=1,EE,002BBE0C,extended,00000001 //   30 FPS
+
+[HP/MP gauge fix]
+author=PCSX2 patch database (ported to BD3FB233 by Claude)
+description=Nudges the HUD sprite rectangles of the HP/MP gauge by a pixel so its pieces line up under PCSX2. Ported from SLPS-25198_BD3FB870; every target holds the matching original value (each within 1 of the patched value) in this build.
+patch=1,EE,2044d894,extended,00000003
+patch=1,EE,2044d890,extended,00000006
+patch=1,EE,2044d888,extended,000001A9
+patch=1,EE,2044d7d4,extended,00000006
+patch=1,EE,2044d7d0,extended,00000004
+patch=1,EE,2044d7cc,extended,0000000c
+patch=1,EE,2044d590,extended,00000011
+patch=1,EE,2044d4d0,extended,00000012
+patch=1,EE,2044c490,extended,00000004
+patch=1,EE,2044ced0,extended,00000004
+patch=1,EE,2044cc90,extended,00000013
+patch=1,EE,2044cc88,extended,0000017e
+patch=1,EE,2044cd50,extended,00000012
+patch=1,EE,2044cbd0,extended,00000012
+patch=1,EE,2044ac20,extended,00000021
+patch=1,EE,2044c420,extended,00000003
+patch=1,EE,2044c41c,extended,00000105
+patch=1,EE,2044c418,extended,000001bb
+patch=1,EE,2044c4e4,extended,00000003
+patch=1,EE,2044c4dc,extended,0000013b
+patch=1,EE,2044c4d8,extended,000001e5
+patch=1,EE,2044ae58,extended,0000018a
+patch=1,EE,2044af20,extended,00000020
+patch=1,EE,2044c060,extended,00000019
+patch=1,EE,2044b460,extended,0000001b
+patch=1,EE,2044b5e0,extended,0000001b
+patch=1,EE,2044b520,extended,0000001b
+patch=1,EE,2044bfa0,extended,0000001b
+patch=1,EE,2044b760,extended,00000005
+patch=1,EE,2044b820,extended,00000005
