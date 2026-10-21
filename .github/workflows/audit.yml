@@ -1,0 +1,16 @@
+name: audit
+on: [push, pull_request]
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch PCSX2 bundled patches
+        run: |
+          git clone --depth 1 https://github.com/PCSX2/pcsx2_patches pcsx2_patches
+          (cd pcsx2_patches/patches && zip -q ../../patches.zip *.pnach)
+      - name: Check for overlapping patch writes
+        run: python tools/audit_pnach.py patches patches.zip

@@ -1,0 +1,30 @@
+gametitle=Final Fantasy X International (NTSC-J) [SLPS-25088] 658597E2
+
+[Swap X and O (Western controls)]
+author=Claude
+description=Swaps Cross and Circle (digital + pressure) so X confirms and O cancels. Hooks the end of libpad scePadRead (0x2DDEB8); code cave at 0x000FD100.
+// --- code cave: runs after memcpy into rdata ($s1), before epilogue ---
+patch=1,EE,000fd100,word,8e020060 // lw   v0,0x60(s0)   (original insn)
+patch=1,EE,000fd104,word,92280003 // lbu  t0,3(s1)      buttons hi byte (active-low)
+patch=1,EE,000fd108,word,31090020 // andi t1,t0,0x20    circle
+patch=1,EE,000fd10c,word,310a0040 // andi t2,t0,0x40    cross
+patch=1,EE,000fd110,word,3108009f // andi t0,t0,0x9f    clear both
+patch=1,EE,000fd114,word,00094840 // sll  t1,t1,1       circle -> cross bit
+patch=1,EE,000fd118,word,000a5042 // srl  t2,t2,1       cross -> circle bit
+patch=1,EE,000fd11c,word,01094025 // or   t0,t0,t1
+patch=1,EE,000fd120,word,010a4025 // or   t0,t0,t2
+patch=1,EE,000fd124,word,a2280003 // sb   t0,3(s1)
+patch=1,EE,000fd128,word,9229000d // lbu  t1,13(s1)     circle pressure
+patch=1,EE,000fd12c,word,922a000e // lbu  t2,14(s1)     cross pressure
+patch=1,EE,000fd130,word,a22a000d // sb   t2,13(s1)
+patch=1,EE,000fd134,word,080b77c9 // j    0x2ddf24      back to scePadRead epilogue
+patch=1,EE,000fd138,word,a229000e // sb   t1,14(s1)     (delay slot)
+// --- hook ---
+patch=1,EE,002ddf1c,word,0803f440 // j 0x0fd100 (was: lw v0,0x60(s0) / 8e020060)
+
+[Swap X and O button prompts]
+author=Claude
+description=Swaps the ○ and × button icons the game draws (dialogue, tutorials, menus, Overdrive commands) to match the swapped controls.
+// Icon sprite table @0x3231a8 (16-byte entries: 1, u, v, ?, ?, w, h, 0). u: △=0x00 ○=0x18 ×=0x30 □=0x48
+patch=1,EE,003231bc,word,01003830 // ○ entry now samples × sprite (was 01003818)
+patch=1,EE,003231cc,word,01003818 // × entry now samples ○ sprite (was 01003830)

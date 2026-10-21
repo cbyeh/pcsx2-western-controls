@@ -1,0 +1,24 @@
+gametitle=Kingdom Hearts II Final Mix+ (NTSC-J) [SLPM-66675] FAF99301 (Crazycatz00 English patch)
+
+[Swap X and O (Western controls)]
+author=Claude (ported from PCSX2 patch DB SLPM-66675_E6FB8E10)
+description=Swaps Cross and Circle (digital + pressure) so X confirms and O cancels. Hook points verified identical in this build.
+patch=1,EE,000fd050,word,00a0c821 // move t9,a1
+patch=1,EE,000fd054,word,080bd7a1 // j    0x2f5e84
+patch=1,EE,000fd058,word,24020334 // addiu v0,zero,0x334 (original insn, delay slot)
+patch=1,EE,000fd05c,word,87240000 // lh   a0,0(t9)      buttons halfword
+patch=1,EE,000fd060,word,30859fff // andi a1,a0,0x9fff  clear circle/cross
+patch=1,EE,000fd064,word,9326000c // lbu  a2,0xc(t9)    cross pressure
+patch=1,EE,000fd068,word,9327000b // lbu  a3,0xb(t9)    circle pressure
+patch=1,EE,000fd06c,word,30814000 // andi at,a0,0x4000
+patch=1,EE,000fd070,word,34a32000 // ori  v1,a1,0x2000
+patch=1,EE,000fd074,word,0061280b // movn a1,v1,at      circle <- cross
+patch=1,EE,000fd078,word,a326000b // sb   a2,0xb(t9)
+patch=1,EE,000fd07c,word,30812000 // andi at,a0,0x2000
+patch=1,EE,000fd080,word,34a34000 // ori  v1,a1,0x4000
+patch=1,EE,000fd084,word,0061280b // movn a1,v1,at      cross <- circle
+patch=1,EE,000fd088,word,a327000c // sb   a3,0xc(t9)
+patch=1,EE,000fd08c,word,03e00008 // jr   ra
+patch=1,EE,000fd090,word,a7250000 // sh   a1,0(t9)      (delay slot)
+patch=1,EE,002f5e7c,word,0803f414 // j 0x0fd050  (was 24020334)
+patch=1,EE,002f5f44,word,0803f417 // j 0x0fd05c  (was jr ra / 03e00008)

@@ -1,0 +1,78 @@
+gametitle=Kingdom Hearts Final Mix (NTSC-J) [SLPS-25198] BD3FB233 (English patched)
+
+[Swap X and O (Western controls)]
+author=Claude (ported from PCSX2 patch DB SLPS-25198_BD3FB870)
+description=Swaps Cross and Circle (digital + pressure) so X confirms and O cancels. Hook points verified identical in this build.
+// entry hook: save rdata ptr in t9, run original first insn, resume
+patch=1,EE,000fd050,word,00a0c821 // move t9,a1
+patch=1,EE,000fd054,word,0809a33d // j    0x268cf4
+patch=1,EE,000fd058,word,24020330 // addiu v0,zero,0x330 (original insn, delay slot)
+patch=1,EE,000fd05c,word,87240000 // lh   a0,0(t9)      buttons halfword
+patch=1,EE,000fd060,word,30859fff // andi a1,a0,0x9fff  clear circle/cross
+patch=1,EE,000fd064,word,9326000c // lbu  a2,0xc(t9)    cross pressure
+patch=1,EE,000fd068,word,9327000b // lbu  a3,0xb(t9)    circle pressure
+patch=1,EE,000fd06c,word,30814000 // andi at,a0,0x4000
+patch=1,EE,000fd070,word,34a32000 // ori  v1,a1,0x2000
+patch=1,EE,000fd074,word,0061280b // movn a1,v1,at      circle <- cross
+patch=1,EE,000fd078,word,a326000b // sb   a2,0xb(t9)
+patch=1,EE,000fd07c,word,30812000 // andi at,a0,0x2000
+patch=1,EE,000fd080,word,34a34000 // ori  v1,a1,0x4000
+patch=1,EE,000fd084,word,0061280b // movn a1,v1,at      cross <- circle
+patch=1,EE,000fd088,word,a327000c // sb   a3,0xc(t9)
+patch=1,EE,000fd08c,word,03e00008 // jr   ra
+patch=1,EE,000fd090,word,a7250000 // sh   a1,0(t9)      (delay slot)
+patch=1,EE,00268cec,word,0803f414 // j 0x0fd050  (was 24020330)
+patch=1,EE,00268db4,word,0803f417 // j 0x0fd05c  (was jr ra / 03e00008)
+
+[Right Stick Camera]
+author=Claude
+description=Push right = camera swings right (same direction as L2/R2). Right stick left/right is turned into L2/R2 (KH1's camera-rotate buttons). Analog mode only. Works with or without the X/O swap. Enable only ONE camera patch.
+patch=1,EE,000fd200,word,0c047cdc // jal  0x11f370       (original call: analog -> direction bits)
+patch=1,EE,000fd204,word,03a0282d // move a1,sp          (delay slot, original)
+patch=1,EE,000fd208,word,93a40002 // lbu  a0,2(sp)       right stick X (0x00 left .. 0xFF right)
+patch=1,EE,000fd20c,word,2c850040 // sltiu a1,a0,0x40    deflected left?
+patch=1,EE,000fd210,word,10a00002 // beqz a1,+2
+patch=1,EE,000fd214,word,2c8500c1 // sltiu a1,a0,0xc1    (delay slot) deflected right? (a1==0)
+patch=1,EE,000fd218,word,34420100 // ori  v0,v0,0x100    stick left  -> L2
+patch=1,EE,000fd21c,word,14a00002 // bnez a1,+2
+patch=1,EE,000fd220,word,00000000 // nop
+patch=1,EE,000fd224,word,34420200 // ori  v0,v0,0x200    stick right -> R2
+patch=1,EE,000fd228,word,08047dd5 // j    0x11f754       back to caller (or s2,s2,v0)
+patch=1,EE,000fd22c,word,00000000 // nop
+patch=1,EE,0011f74c,word,0200202d // move a0,s0          (delay slot of hook)
+patch=1,EE,0011f748,word,0803f480 // j 0x0fd200          (was: move a0,s0 ; jal 0x11f370)
+
+[Right Stick Camera (Inverted)]
+author=Claude
+description=Inverted: push right = camera swings left. Right stick left/right is turned into R2/L2 (KH1's camera-rotate buttons). Analog mode only. Works with or without the X/O swap. Enable only ONE camera patch.
+patch=1,EE,000fd200,word,0c047cdc // jal  0x11f370       (original call: analog -> direction bits)
+patch=1,EE,000fd204,word,03a0282d // move a1,sp          (delay slot, original)
+patch=1,EE,000fd208,word,93a40002 // lbu  a0,2(sp)       right stick X (0x00 left .. 0xFF right)
+patch=1,EE,000fd20c,word,2c850040 // sltiu a1,a0,0x40    deflected left?
+patch=1,EE,000fd210,word,10a00002 // beqz a1,+2
+patch=1,EE,000fd214,word,2c8500c1 // sltiu a1,a0,0xc1    (delay slot) deflected right? (a1==0)
+patch=1,EE,000fd218,word,34420200 // ori  v0,v0,0x200    stick left  -> R2
+patch=1,EE,000fd21c,word,14a00002 // bnez a1,+2
+patch=1,EE,000fd220,word,00000000 // nop
+patch=1,EE,000fd224,word,34420100 // ori  v0,v0,0x100    stick right -> L2
+patch=1,EE,000fd228,word,08047dd5 // j    0x11f754       back to caller (or s2,s2,v0)
+patch=1,EE,000fd22c,word,00000000 // nop
+patch=1,EE,0011f74c,word,0200202d // move a0,s0          (delay slot of hook)
+patch=1,EE,0011f748,word,0803f480 // j 0x0fd200          (was: move a0,s0 ; jal 0x11f370)
+
+[Widescreen 16:9]
+gsaspectratio=16:9
+author=Michael P / E.Mecenate (ported to BD3FB233 by Claude)
+description=16:9 widescreen. Ported from PCSX2's database patch for SLPS-25198_BD3FB870; every target verified against this executable. Fixes that patch's "hor value second half" line, which wrote 0x110898 (a stack store) instead of 0x110b34.
+patch=1,EE,00110644,word,3c0143d6 // render fix               (was 3c0143a0)
+patch=1,EE,00110b30,word,3c013f19 // hor value 0.6, high half (was 3c013f4c)
+patch=1,EE,00110b34,word,3421999a // hor value 0.6, low half  (was 3421cccc)
+patch=1,EE,002a6948,word,70007000 // FMV fix                  (was 74007000)
+patch=1,EE,0010631c,word,3c071900 // FMV fix                  (was 3c071c08)
+patch=1,EE,00104334,word,00000000 // black border fix         (was ac516208)
+patch=1,EE,00104454,word,00000000 // black border fix         (was ac456208)
+patch=1,EE,00267b6c,word,3c013f40 // matrix: menus, textboxes, world map, gummi (was 00000000)
+patch=1,EE,00267b70,word,44810000 //                          (was 00000000)
+patch=1,EE,00267b78,word,4600c602 //                          (was 00000000)
+patch=1,EE,204951d0,word,3faaaaab // textbox width            (was 3f800000 at runtime)
+patch=1,EE,0020a170,word,3c0144fa // weapon-select position   (was 3c014500)
