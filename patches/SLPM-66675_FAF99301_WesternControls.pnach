@@ -22,3 +22,22 @@ patch=1,EE,000fd08c,word,03e00008 // jr   ra
 patch=1,EE,000fd090,word,a7250000 // sh   a1,0(t9)      (delay slot)
 patch=1,EE,002f5e7c,word,0803f414 // j 0x0fd050  (was 24020334)
 patch=1,EE,002f5f44,word,0803f417 // j 0x0fd05c  (was jr ra / 03e00008)
+
+[Swap X and O button prompts]
+author=Claude
+description=Swaps the ○ and × button icons (symbol and colour) in tutorial/help boxes to match the swapped controls. Edits KH2's button sprite table (loaded at 0x1D1FA60) and only writes while that table is present. Use with the included texture pack for menu/pause icons.
+// Button sprite entries (0x2C bytes: u0,v0,u1,v1,0,0,colour x4):
+//   ○ @1D1FA60 (92,65,110,81 red 801e3cdc)   △ @1D1FA8C (green)   × @1D1FAB8 (92,81,110,96 blue 8098474a)   □ @1D1FAE4 (pink)
+patch=1,EE,E00Ca60a,extended,01d1faa4 // only if the △ entry's colour is present (table loaded): run next 12 lines
+patch=1,EE,21d1fa64,extended,00000051 // ○ entry v0 = 81 (× symbol)
+patch=1,EE,21d1fa6c,extended,00000060 // ○ entry v1 = 96
+patch=1,EE,21d1fa78,extended,8098474a // ○ entry colours = × blue
+patch=1,EE,21d1fa7c,extended,8098474a
+patch=1,EE,21d1fa80,extended,8098474a
+patch=1,EE,21d1fa84,extended,8098474a
+patch=1,EE,21d1fabc,extended,00000041 // × entry v0 = 65 (○ symbol)
+patch=1,EE,21d1fac4,extended,00000051 // × entry v1 = 81
+patch=1,EE,21d1fad0,extended,801e3cdc // × entry colours = ○ red
+patch=1,EE,21d1fad4,extended,801e3cdc
+patch=1,EE,21d1fad8,extended,801e3cdc
+patch=1,EE,21d1fadc,extended,801e3cdc

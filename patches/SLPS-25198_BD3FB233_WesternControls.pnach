@@ -76,3 +76,29 @@ patch=1,EE,00267b70,word,44810000 //                          (was 00000000)
 patch=1,EE,00267b78,word,4600c602 //                          (was 00000000)
 patch=1,EE,204951d0,word,3faaaaab // textbox width            (was 3f800000 at runtime)
 patch=1,EE,0020a170,word,3c0144fa // weapon-select position   (was 3c014500)
+
+[60 FPS]
+author=PeterDelta (ported to BD3FB233 by Claude)
+description=60 FPS in gameplay with game speed compensated; drops back to 30 FPS for FMVs, cutscenes and scripted scenes. Ported unchanged from PCSX2's database patch for SLPS-25198_BD3FB870; every target verified in this build. Might need EE Overclock (130%).
+// 0x2BBE0C frame interval (0 = 60, 1 = 30)   0x2BBDEC game speed float   0x2C5958 game-state flags
+patch=1,EE,002BBE0C,extended,00000000 // default: 60 FPS
+patch=1,EE,202BBDEC,extended,3F800000 // speed 1.0
+patch=1,EE,E0010001,extended,002A6344 // if flag at 2A6344 == 1:
+patch=1,EE,002BBE0C,extended,00000001 //   30 FPS
+patch=1,EE,0010CFAC,extended,00 // timestep constant lui 0x3f80 -> 0x3f00 (0.5)
+patch=1,EE,1018198C,extended,3F80 // lui 0x4000 (2.0) -> 1.0
+patch=1,EE,10181A34,extended,3F80 // lui 0x4000 (2.0) -> 1.0
+patch=1,EE,E0010080,extended,002BC0BC // if 2BC0BC == 0x80:
+patch=1,EE,002BBE0C,extended,00000001 //   30 FPS
+patch=1,EE,E0010004,extended,002C5958 // if state == 4:
+patch=1,EE,202BBDEC,extended,3F000000 //   speed 0.5
+patch=1,EE,E0037000,extended,002A3F38 // if 2A3F38 == 0x7000: next 3 lines
+patch=1,EE,E0020001,extended,002C8054 //   if 2C8054 == 1: next 2 lines
+patch=1,EE,002BBE0C,extended,00000001 //     30 FPS
+patch=1,EE,0010CFAC,extended,80 //     timestep back to 1.0
+patch=1,EE,E0010008,extended,002C5958 // if state == 8:
+patch=1,EE,002BBE0C,extended,00000001 //   30 FPS
+patch=1,EE,E0011008,extended,002C5958 // if state == 0x1008:
+patch=1,EE,002BBE0C,extended,00000001 //   30 FPS
+patch=1,EE,E0010009,extended,002C5958 // if state == 9:
+patch=1,EE,002BBE0C,extended,00000001 //   30 FPS
